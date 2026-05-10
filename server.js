@@ -1,19 +1,3 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-const express = require("express");
-const cors = require("cors");
-const Tiktok = require("@tobyg74/tiktok-api-dl");
-
-const app = express();
-app.use(cors());
-
-app.get("/", (req, res) => {
-  res.json({
-    status: true,
-    message: "TikTok API Running"
-  });
-});
-
 app.get("/tiktok", async (req, res) => {
   const url = req.query.url;
 
@@ -25,27 +9,46 @@ app.get("/tiktok", async (req, res) => {
   }
 
   try {
-    let data;
 
+    // MAIN PACKAGE
     try {
-      data = await Tiktok.Downloader(url, { version: "v1" });
-    } catch (e1) {
-      data = await Tiktok.Downloader(url, { version: "v2" });
+
+      const data = await Tiktok.Downloader(url, {
+        version: "v1"
+      });
+
+      return res.json({
+        status: true,
+        source: "package",
+        result: data.result || data
+      });
+
+    } catch (e) {
+
+      console.log("Package failed");
+
     }
 
-    res.json(data);
+    // FALLBACK API
+    const axios = require("axios");
+
+    const api =
+      `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`;
+
+    const response = await axios.get(api);
+
+    return res.json({
+      status: true,
+      source: "tikwm",
+      result: response.data.data
+    });
 
   } catch (e) {
-    res.json({
+
+    return res.json({
       status: false,
-      message: "TikTok request blocked or failed",
       error: e.toString()
     });
+
   }
-});
-
-const PORT = process.env.PORT || 10000;
-
-app.listen(PORT, () => {
-  console.log("API running on port " + PORT);
 });
