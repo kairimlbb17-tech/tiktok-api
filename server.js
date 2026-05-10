@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
+const https = require("https");
 
 const app = express();
 
@@ -24,10 +25,15 @@ app.get("/tiktok", async (req, res) => {
   }
 
   try {
+    const api =
+      "https://api.tiklydown.eu.org/api/download?url=" +
+      encodeURIComponent(url);
 
-    const api = `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(url)}`;
-
-    const response = await axios.get(api);
+    const response = await axios.get(api, {
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
+    });
 
     res.json({
       status: true,
@@ -35,12 +41,10 @@ app.get("/tiktok", async (req, res) => {
     });
 
   } catch (e) {
-
     res.json({
       status: false,
       error: e.toString()
     });
-
   }
 });
 
