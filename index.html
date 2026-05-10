@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TikTok Downloader</title>
+<style>
+body{background:#111;color:white;font-family:Arial;padding:20px}
+.box{max-width:520px;margin:auto;background:#222;padding:25px;border-radius:20px}
+input,button{width:100%;padding:15px;margin-top:12px;border:0;border-radius:12px;box-sizing:border-box}
+input{background:#333;color:white}
+button{background:#ff0050;color:white;font-weight:bold}
+.card{background:#1a1a1a;padding:15px;border-radius:15px;margin-top:20px}
+img,video{width:100%;border-radius:12px;margin-top:10px}
+a{display:block;background:#00c853;color:white;text-align:center;padding:14px;border-radius:12px;text-decoration:none;margin-top:10px}
+pre{white-space:pre-wrap;background:#000;padding:10px;border-radius:10px;font-size:12px}
+.error{background:#6b2020;padding:12px;border-radius:10px;margin-top:15px}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h1>TikTok Downloader</h1>
+<input id="url" placeholder="Paste TikTok link">
+<button onclick="download()">Download</button>
+<div id="result"></div>
+</div>
+
+<script>
+async function download(){
+  const url = document.getElementById("url").value.trim();
+  const result = document.getElementById("result");
+
+  if(!url){
+    result.innerHTML = `<div class="error">Paste TikTok URL first</div>`;
+    return;
+  }
+
+  result.innerHTML = "Loading...";
+
+  try{
+    const api = "https://tiktok-api-4itt.onrender.com/tiktok?url=" + encodeURIComponent(url);
+    const res = await fetch(api);
+    const data = await res.json();
+
+    console.log(data);
+
+    const raw = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+    if(!data.result){
+      result.innerHTML = `<div class="error">No result found from API</div>` + raw;
+      return;
+    }
+
+    const r = data.result;
+
+    const title = r.desc || "TikTok Video";
+    const author = r.author?.nickname || r.author?.username || "Unknown";
+
+    const cover =
+      r.cover?.[0] ||
+      r.cover ||
+      r.originCover?.[0] ||
+      r.originCover ||
+      "";
+
+    const noWatermark =
+      r.video?.url ||
+      r.video?.playAddr?.[0] ||
+      r.video?.[0] ||
+      "";
+
+    const withWatermark =
+      r.video?.downloadAddr?.[0] ||
+      r.video?.downloadAddr ||
+      noWatermark;
+
+    if(!noWatermark){
+      result.innerHTML = `<div class="error">No video URL found</div>` + raw;
+      return;
+    }
+
+    result.innerHTML = `
+      <div class="card">
+        ${cover ? `<img src="${cover}">` : ""}
+        <h3>${title}</h3>
+        <p>Author: ${author}</p>
+
+        <video controls src="${noWatermark}"></video>
+
+        <a href="${noWatermark}" target="_blank">Download No Watermark</a>
+        <a href="${withWatermark}" target="_blank" style="background:#2196f3">Download With Watermark</a>
+
+        <h4>Raw API Response:</h4>
+        ${raw}
+      </div>
+    `;
+
+  }catch(e){
+    result.innerHTML = `<div class="error">Fetch error: ${e}</div>`;
+  }
+}
+</script>
+
+</body>
+</html>
