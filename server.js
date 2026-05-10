@@ -34,10 +34,8 @@ app.get("/tiktok", async (req, res) => {
       version: "v1"
     });
 
-    res.json({
-      status: true,
-      result: data.result
-    });
+    // SHOW FULL RESPONSE
+    res.json(data);
 
   } catch (error) {
 
