@@ -1,3 +1,17 @@
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
+
+const app = express();
+app.use(cors());
+
+app.get("/", (req, res) => {
+  res.json({
+    status: true,
+    message: "TikTok API Running"
+  });
+});
+
 app.get("/tiktok", async (req, res) => {
   const url = req.query.url;
 
@@ -9,46 +23,34 @@ app.get("/tiktok", async (req, res) => {
   }
 
   try {
-
-    // MAIN PACKAGE
-    try {
-
-      const data = await Tiktok.Downloader(url, {
-        version: "v1"
-      });
-
-      return res.json({
-        status: true,
-        source: "package",
-        result: data.result || data
-      });
-
-    } catch (e) {
-
-      console.log("Package failed");
-
-    }
-
-    // FALLBACK API
-    const axios = require("axios");
-
-    const api =
-      `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`;
-
+    const api = "https://www.tikwm.com/api/?url=" + encodeURIComponent(url);
     const response = await axios.get(api);
 
-    return res.json({
+    if (!response.data || !response.data.data) {
+      return res.json({
+        status: false,
+        message: "No data from TikWM",
+        raw: response.data
+      });
+    }
+
+    res.json({
       status: true,
       source: "tikwm",
       result: response.data.data
     });
 
   } catch (e) {
-
-    return res.json({
+    res.json({
       status: false,
+      message: "API failed",
       error: e.toString()
     });
-
   }
+});
+
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, () => {
+  console.log("API running on port " + PORT);
 });
