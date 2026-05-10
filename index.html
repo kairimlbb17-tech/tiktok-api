@@ -3,100 +3,284 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TikTok Downloader</title>
+
 <style>
-body{background:#111;color:white;font-family:Arial;padding:20px}
-.box{max-width:520px;margin:auto;background:#222;padding:25px;border-radius:20px}
-input,button{width:100%;padding:15px;margin-top:12px;border:0;border-radius:12px;box-sizing:border-box}
-input{background:#333;color:white}
-button{background:#ff0050;color:white;font-weight:bold}
-.card{background:#1a1a1a;padding:15px;border-radius:15px;margin-top:20px}
-img,video{width:100%;border-radius:12px;margin-top:10px}
-a{display:block;background:#00c853;color:white;text-align:center;padding:14px;border-radius:12px;text-decoration:none;margin-top:10px}
-pre{white-space:pre-wrap;background:#000;padding:10px;border-radius:10px;font-size:12px}
-.error{background:#6b2020;padding:12px;border-radius:10px;margin-top:15px}
+body {
+  background: #111;
+  color: white;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.box {
+  max-width: 520px;
+  margin: auto;
+  background: #222;
+  padding: 25px;
+  border-radius: 20px;
+}
+
+h1 {
+  margin-top: 0;
+}
+
+input, button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+input {
+  background: #333;
+  color: white;
+}
+
+button {
+  background: #ff0050;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.card {
+  background: #1a1a1a;
+  padding: 15px;
+  border-radius: 15px;
+  margin-top: 20px;
+}
+
+img, video {
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+a {
+  display: block;
+  background: #00c853;
+  color: white;
+  text-align: center;
+  padding: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.blue {
+  background: #2196f3;
+}
+
+.gray {
+  background: #555;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #000;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.error {
+  background: #6b2020;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
+.info {
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 8px;
+  word-break: break-word;
+}
 </style>
 </head>
+
 <body>
 
 <div class="box">
-<h1>TikTok Downloader</h1>
-<input id="url" placeholder="Paste TikTok link">
-<button onclick="download()">Download</button>
-<div id="result"></div>
+  <h1>TikTok Downloader</h1>
+
+  <input id="url" placeholder="Paste TikTok link">
+
+  <button onclick="downloadVideo()">Download</button>
+
+  <div id="result"></div>
 </div>
 
 <script>
-async function download(){
+async function downloadVideo() {
   const url = document.getElementById("url").value.trim();
   const result = document.getElementById("result");
 
-  if(!url){
+  if (!url) {
     result.innerHTML = `<div class="error">Paste TikTok URL first</div>`;
     return;
   }
 
-  result.innerHTML = "Loading...";
+  result.innerHTML = `<p>Loading...</p>`;
 
-  try{
-    const api = "https://tiktok-api-4itt.onrender.com/tiktok?url=" + encodeURIComponent(url);
-    const res = await fetch(api);
-    const data = await res.json();
+  try {
+    const api =
+      "https://tiktok-api-4itt.onrender.com/tiktok?url=" +
+      encodeURIComponent(url);
+
+    const response = await fetch(api);
+    const data = await response.json();
 
     console.log(data);
 
     const raw = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 
-    if(!data.result){
-      result.innerHTML = `<div class="error">No result found from API</div>` + raw;
+    if (!data.status || !data.result) {
+      result.innerHTML =
+        `<div class="error">No result found from API</div>` + raw;
       return;
     }
 
     const r = data.result;
 
-    const title = r.desc || "TikTok Video";
-    const author = r.author?.nickname || r.author?.username || "Unknown";
+    const title =
+      r.title ||
+      r.desc ||
+      "TikTok Video";
+
+    const author =
+      r.author?.nickname ||
+      r.author?.unique_id ||
+      r.author?.username ||
+      r.author ||
+      "Unknown";
+
+    const username =
+      r.author?.unique_id ||
+      r.author?.username ||
+      "N/A";
 
     const cover =
-      r.cover?.[0] ||
       r.cover ||
+      r.origin_cover ||
+      r.dynamic_cover ||
+      r.cover?.[0] ||
       r.originCover?.[0] ||
-      r.originCover ||
       "";
 
     const noWatermark =
+      r.play ||
+      r.hdplay ||
       r.video?.url ||
       r.video?.playAddr?.[0] ||
       r.video?.[0] ||
       "";
 
     const withWatermark =
+      r.wmplay ||
       r.video?.downloadAddr?.[0] ||
       r.video?.downloadAddr ||
-      noWatermark;
+      noWatermark ||
+      "";
 
-    if(!noWatermark){
-      result.innerHTML = `<div class="error">No video URL found</div>` + raw;
+    const music =
+      r.music ||
+      r.music_info?.play ||
+      "";
+
+    const musicTitle =
+      r.music_info?.title ||
+      r.music?.title ||
+      "N/A";
+
+    const duration =
+      r.duration ||
+      r.video?.duration ||
+      "N/A";
+
+    const region =
+      r.region ||
+      "N/A";
+
+    const likes =
+      r.digg_count ||
+      r.statistics?.likeCount ||
+      r.stats?.diggCount ||
+      "N/A";
+
+    const comments =
+      r.comment_count ||
+      r.statistics?.commentCount ||
+      r.stats?.commentCount ||
+      "N/A";
+
+    const shares =
+      r.share_count ||
+      r.statistics?.shareCount ||
+      r.stats?.shareCount ||
+      "N/A";
+
+    const views =
+      r.play_count ||
+      r.statistics?.playCount ||
+      r.stats?.playCount ||
+      "N/A";
+
+    if (!noWatermark) {
+      result.innerHTML =
+        `<div class="error">No video URL found</div>` + raw;
       return;
     }
 
     result.innerHTML = `
       <div class="card">
+
         ${cover ? `<img src="${cover}">` : ""}
+
         <h3>${title}</h3>
-        <p>Author: ${author}</p>
+
+        <div class="info"><b>Author:</b> ${author}</div>
+        <div class="info"><b>Username:</b> ${username}</div>
+        <div class="info"><b>Region:</b> ${region}</div>
+        <div class="info"><b>Duration:</b> ${duration}</div>
+        <div class="info"><b>Likes:</b> ${likes}</div>
+        <div class="info"><b>Comments:</b> ${comments}</div>
+        <div class="info"><b>Shares:</b> ${shares}</div>
+        <div class="info"><b>Views:</b> ${views}</div>
+        <div class="info"><b>Music:</b> ${musicTitle}</div>
 
         <video controls src="${noWatermark}"></video>
 
-        <a href="${noWatermark}" target="_blank">Download No Watermark</a>
-        <a href="${withWatermark}" target="_blank" style="background:#2196f3">Download With Watermark</a>
+        <a href="${noWatermark}" target="_blank">
+          Download No Watermark
+        </a>
 
-        <h4>Raw API Response:</h4>
+        <a href="${withWatermark}" target="_blank" class="blue">
+          Download With Watermark
+        </a>
+
+        ${
+          music
+            ? `<a href="${music}" target="_blank" class="gray">Download Music</a>`
+            : ""
+        }
+
+        <h4>Raw API Response</h4>
         ${raw}
+
       </div>
     `;
 
-  }catch(e){
-    result.innerHTML = `<div class="error">Fetch error: ${e}</div>`;
+  } catch (e) {
+    result.innerHTML =
+      `<div class="error">Fetch error: ${e}</div>`;
   }
 }
 </script>
