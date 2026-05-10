@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const axios = require("axios");
-const https = require("https");
+const Tiktok = require("@tobyg74/tiktok-api-dl");
 
 const app = express();
 
@@ -25,20 +24,11 @@ app.get("/tiktok", async (req, res) => {
   }
 
   try {
-    const api =
-      "https://api.tiklydown.eu.org/api/download?url=" +
-      encodeURIComponent(url);
-
-    const response = await axios.get(api, {
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
-      })
+    const data = await Tiktok.Downloader(url, {
+      version: "v1"
     });
 
-    res.json({
-      status: true,
-      result: response.data
-    });
+    res.json(data);
 
   } catch (e) {
     res.json({
