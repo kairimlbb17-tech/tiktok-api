@@ -3,7 +3,6 @@ const cors = require("cors");
 const Tiktok = require("@tobyg74/tiktok-api-dl");
 
 const app = express();
-
 app.use(cors());
 
 app.get("/", (req, res) => {
@@ -24,15 +23,20 @@ app.get("/tiktok", async (req, res) => {
   }
 
   try {
-    const data = await Tiktok.Downloader(url, {
-      version: "v1"
-    });
+    let data;
+
+    try {
+      data = await Tiktok.Downloader(url, { version: "v1" });
+    } catch (e1) {
+      data = await Tiktok.Downloader(url, { version: "v2" });
+    }
 
     res.json(data);
 
   } catch (e) {
     res.json({
       status: false,
+      message: "TikTok request blocked or failed",
       error: e.toString()
     });
   }
